@@ -1,8 +1,10 @@
 package stock
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/JSGette/agent_summit_bazel_workshop/internal/testutils"
 	"github.com/JSGette/agent_summit_bazel_workshop/pkg/models"
@@ -71,6 +73,85 @@ func TestService_GetCurrentPrice(t *testing.T) {
 				t.Errorf("Expected symbol %v, got %v", tt.wantSymbol, result.Symbol)
 			}
 		})
+	}
+}
+
+// TestService_ConcurrentRateLimiting is a flaky test by design that tests race conditions
+// in rate limiting logic. This test may fail intermittently due to timing issues.
+func TestService_ConcurrentRateLimiting(t *testing.T) {
+	mockClient := testutils.NewMockHTTPClient()
+	service := NewService(mockClient)
+
+	// Mock successful API response
+	expectedURL := "https://query1.finance.yahoo.com/v7/finance/quote?symbols=DDOG"
+	mockClient.AddResponse(expectedURL, 200, testutils.YahooFinanceStockResponse)
+
+	numGoroutines := 5
+	results := make(chan error, numGoroutines)
+
+	// Launch multiple goroutines to create race condition
+	for i := 0; i < numGoroutines; i++ {
+		go func(id int) {
+			// Add some random delay to increase chance of race condition
+			time.Sleep(time.Duration(id*50) * time.Millisecond)
+
+			start := time.Now()
+			_, err := service.GetCurrentPrice("DDOG")
+			duration := time.Since(start)
+
+			// This assertion is flaky by design - it expects all requests
+			// to complete within 3 seconds, but with rate limiting (2s between requests)
+			// and multiple concurrent requests, this may fail randomly
+			if duration > 3*time.Second {
+				results <- fmt.Errorf("request %d took too long: %v", id, duration)
+				return
+			}
+
+			results <- err
+		}(i)
+	}
+
+	// Collect results
+	var errors []error
+	for i := 0; i < numGoroutines; i++ {
+		if err := <-results; err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	// This test is designed to be flaky - sometimes it passes, sometimes it fails
+	// depending on exact timing of goroutines and rate limiting behavior
+	if len(errors) > 2 { // Allow some failures but not all
+		t.Errorf("Too many concurrent requests failed (%d/%d): %v", len(errors), numGoroutines, errors)
+	}
+}
+
+// TestService_TimingDependentValidation is another flaky test that depends on system timing
+func TestService_TimingDependentValidation(t *testing.T) {
+	mockClient := testutils.NewMockHTTPClient()
+	service := NewService(mockClient)
+
+	// Mock response
+	expectedURL := "https://query1.finance.yahoo.com/v7/finance/quote?symbols=TEST"
+	mockClient.AddResponse(expectedURL, 200, testutils.YahooFinanceStockResponse)
+
+	// This test uses nanosecond timing which is inherently flaky
+	start := time.Now()
+	_, err := service.GetCurrentPrice("TEST")
+	nanos := time.Since(start).Nanoseconds()
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+
+	// More aggressive flaky assertion: use multiple criteria to increase failure chance
+	// This will fail roughly 30% of the time based on nanosecond timing patterns
+	lastDigit := nanos % 10
+	secondLastDigit := (nanos / 10) % 10
+
+	if lastDigit == 0 || lastDigit == 3 || lastDigit == 7 || secondLastDigit == 2 {
+		t.Errorf("Request completed at an 'unlucky' nanosecond timing: %d ns (last digits: %d%d)", nanos, secondLastDigit, lastDigit)
 	}
 }
 
