@@ -1,0 +1,11 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "testutils",
+    srcs = [
+        "fixtures.go",
+        "mocks.go",
+    ],
+    importpath = "github.com/JSGette/agent_summit_bazel_workshop/internal/testutils",
+    visibility = ["//:__subpackages__"],
+)

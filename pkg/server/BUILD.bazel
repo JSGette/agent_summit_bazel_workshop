@@ -1,0 +1,18 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "server",
+    srcs = [
+        "handlers.go",
+        "middleware.go",
+        "router.go",
+        "server.go",
+    ],
+    importpath = "github.com/JSGette/agent_summit_bazel_workshop/pkg/server",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//pkg/models",
+        "//pkg/stock",
+        "//pkg/weather",
+    ],
+)

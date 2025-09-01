@@ -1,0 +1,26 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "stock",
+    srcs = [
+        "client.go",
+        "demo.go",
+        "service.go",
+    ],
+    importpath = "github.com/JSGette/agent_summit_bazel_workshop/pkg/stock",
+    visibility = ["//visibility:public"],
+    deps = ["//pkg/models"],
+)
+
+go_test(
+    name = "stock_test",
+    srcs = [
+        "client_test.go",
+        "service_test.go",
+    ],
+    embed = [":stock"],
+    deps = [
+        "//internal/testutils",
+        "//pkg/models",
+    ],
+)

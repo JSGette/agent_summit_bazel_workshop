@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "models",
+    srcs = [
+        "common.go",
+        "stock.go",
+        "weather.go",
+    ],
+    importpath = "github.com/JSGette/agent_summit_bazel_workshop/pkg/models",
+    visibility = ["//visibility:public"],
+)
