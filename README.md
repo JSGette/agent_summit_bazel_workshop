@@ -10,8 +10,8 @@ working with it.
 
 
 ## Setup ##
-1. Install `bazelisk`. We want to be able to bump bazel's version whenever we
-want or need. Major LTE versions are released every year and usually bring
+1. Install `bazelisk`. We want to be able to bump bazel's version whenever we need.
+Major LTE versions are released every year and usually bring
 UX and performance improvements, sometimes it is necessary to also upgrade to
 new patch or minor versions to fix bugs. `bazelisk` reads `bazelversion` file
 and automatically pulls the version that is needed by this particular project.
