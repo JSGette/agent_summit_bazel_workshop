@@ -90,7 +90,7 @@ bazel run //cmd:cmd
 ## Flaky Tests Detection ##
 `bazel` is not only powerful when it comes to building, but also very helpful running
 tests. It allows us:
-- to set how many times we should run certain tests or all of them by setting [--runs_per_test=](https://bazel.build/reference/command-line-reference#flag--runs_per_test)
+- to set how many times we should run certain tests or all of them by setting [--runs_per_test](https://bazel.build/reference/command-line-reference#flag--runs_per_test)
 - to automatically detect flaky tests by setting [--runs_per_test_detects_flakes](https://bazel.build/reference/command-line-reference#flag--runs_per_test_detects_flakes). When used in combination with the flag above it will not fail the results of `bazel test` commands,
 but will mark failing tests as `FLAKY` instead of `FAILED`
 - to set timeouts and compute resources based on [size attribute](https://bazel.build/reference/be/common-definitions#common-attributes-tests)
