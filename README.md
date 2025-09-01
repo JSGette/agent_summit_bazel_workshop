@@ -1,350 +1,93 @@
-# Weather & Stock API
+# Agent Summit Bazel Workshop #
 
-A simple Go web service that provides REST APIs for fetching weather information and stock prices, with **no API keys required**.
+The purpose of this workshop is to show Agent developers
+how to interact with bazel. We are mainly focusing on
+`go` as other parts, such as dealing with native dependencies
+will be mainly in scope of `Agent Build` team. It is not expected
+that participants of this workshop have prior `bazel` experience. 
+In fact, our intention is to show how easy it actually is to start
+working with it.
 
-## Features
 
-- 🌤️ **Weather API**: Get current weather for any city using Open-Meteo (free, no auth)
-- 📈 **Stock API**: Get real-time stock prices using Yahoo Finance (free, no auth)
-- 🎯 **Datadog Focus**: Special endpoint for Datadog (DDOG) stock price
-- 🛡️ **Resilient Fallback**: Automatic demo mode when APIs are rate-limited or unavailable
-- ✅ **Comprehensive Testing**: Full unit test coverage with mocked HTTP clients
-- 🔧 **Production Ready**: Logging, middleware, graceful shutdown, error handling
-- 🐳 **Zero Configuration**: No API keys, tokens, or external dependencies required
+## Environment Setup ##
 
-## Quick Start
+This sections covers steps that should be taken before we actually
+begin the workshop.
 
-### Build and Run
-```bash
-# Build the application
-go build -o bin/weather-stock-api ./cmd
+1. Install `bazelisk`. We want to be able to bump bazel's version whenever we
+want or need. Major LTE versions are released every year and usually bring
+UX and performance improvements, sometimes it is necessary to also upgrade to
+new patch or minor versions to fix bugs. `bazelisk` reads `bazelversion` file
+and automatically pulls the version that is needed by this particular project.
+```zsh
+which bazelisk
 
-# Run the server
-./bin/weather-stock-api
-
-# Or run directly with Go
-go run ./cmd
+# If you have no installation then do so
+brew install bazelisk
 ```
 
-The server will start on `http://localhost:3000` by default.
-
-### Docker (Optional)
-```bash
-# Build Docker image
-docker build -t weather-stock-api .
-
-# Run container
-docker run -p 3000:3000 weather-stock-api
+2. Create `.bazelversion` file. The file is read by `bazelisk` to pull
+required bazel's version. This makes the process of build system update 
+completely transparent to the users, we also ensure that going to old
+branches doesn't break the build process:
+```
+# We are using latest stable version
+8.3.1
 ```
 
-## API Endpoints
+3. Create `MODULE.bazel` file. For external dependency management `bazel`
+is using a built-in system called `bzlmod`, it works similar to any other
+modern dependency manager. `MODULE.bazel` file is the main source, it is
+possible to define several `MODULE` files and then import them into the root one,
+but **IT IS IMPORTANT TO HAVE AT LEAST ONE MODULE.bazel FILE AS IT HINTS BAZEL**
+**THAT THIS IS BAZEL'S WORKSPACE**.
 
-### Weather Endpoints
+```python
+bazel_dep(name = "rules_go", version = "0.57.0")
+bazel_dep(name = "gazelle", version = "0.45.0")
 
-#### Get Weather Data
-```bash
-GET /weather?city=<city_name>
 
-# Examples:
-curl "http://localhost:3000/weather?city=Stuttgart"
-curl "http://localhost:3000/weather?city=Berlin"
-curl "http://localhost:3000/weather?city=New York"
+# Bazel can manage toolchains and SDKs for us.
+# This way we don't need to manually install the Go SDK
+# and we ensure that all users have the same version of the Go SDK.
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+
+# Setting Go SDK version.
+# Alternative ways to set Go SDK can be found here:
+# https://github.com/bazel-contrib/rules_go/blob/master/docs/go/core/bzlmod.md#go-sdks
+go_sdk.download(version = "1.24.4")
+```
+4. Create `BUILD.bazel` file in the root of the project. BUILD files are 
+letting `bazel` know what is considered a package. The presence of the BUILD file
+in a directory makes the content of that directory visible to `bazel`. The content of
+the `./BUILD.bazel` file:
+```python
+load("@gazelle//:def.bzl", "gazelle")
+
+gazelle(name = "gazelle")
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "city": "Stuttgart",
-    "country": "Germany",
-    "temperature": 22.5,
-    "condition": "partly_cloudy",
-    "description": "Partly cloudy",
-    "is_day": true,
-    "coordinates": {
-      "latitude": 48.7758,
-      "longitude": 9.1829
-    },
-    "metadata": {
-      "timestamp": "2024-01-15T14:30:00Z",
-      "source": "Open-Meteo"
-    }
-  },
-  "timestamp": "2024-01-15T14:30:15Z"
-}
+5. Run `gazelle`. As you may have noticed in the previous step we are adding some
+magical lines mentioning gazelle. It is mentioned in `MODULE.bazel` as well as in `BUILD.bazel`.
+`gazelle` is a BUILD file generator tool for `bazel`. Go projects' structure is usually very
+straight forward and go's build system is modern enough to rely on it instead of re-inventing 
+the wheel again. With that being said, most of the time we don't need to deal with bazel's internals
+and can just let `gazelle` do its work:
+```zsh
+bazel run //:gazelle
+
+# Now let's run git to show us generated files
+git status
+
+# Let's try to build and test the project
+bazel build //...
+
+# Execute unit tests
+bazel test //...
 ```
 
-#### Get Weather Summary
-```bash
-GET /weather/summary?city=<city_name>
-
-curl "http://localhost:3000/weather/summary?city=Stuttgart"
+6. Run the demo application:
+```zsh
+bazel run //cmd:cmd
 ```
 
-### Stock Endpoints
-
-#### Get Datadog Stock Price
-```bash
-GET /stock/datadog
-
-curl "http://localhost:3000/stock/datadog"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "symbol": "DDOG",
-    "company_name": "Datadog, Inc.",
-    "price": 125.67,
-    "change": 2.34,
-    "change_percent": 1.89,
-    "previous_close": 123.33,
-    "volume": 1234567,
-    "market_cap": 40000000000,
-    "market_state": "REGULAR",
-    "currency": "USD",
-    "metadata": {
-      "timestamp": "2024-01-15T14:30:00Z",
-      "source": "Yahoo Finance"
-    }
-  },
-  "timestamp": "2024-01-15T14:30:15Z"
-}
-```
-
-#### Get Any Stock Price
-```bash
-GET /stock?symbol=<symbol>
-
-# Examples:
-curl "http://localhost:3000/stock?symbol=DDOG"
-curl "http://localhost:3000/stock?symbol=AAPL"
-curl "http://localhost:3000/stock?symbol=GOOGL"
-```
-
-#### Get Stock Summary
-```bash
-GET /stock/summary?symbol=<symbol>
-
-curl "http://localhost:3000/stock/summary?symbol=DDOG"
-```
-
-### Health Check
-```bash
-GET /health
-
-curl "http://localhost:3000/health"
-```
-
-### API Information
-```bash
-GET /
-
-curl "http://localhost:3000/"
-```
-
-## Configuration
-
-The application supports configuration via environment variables and command-line flags:
-
-### Environment Variables
-- `HOST` - Server host (default: localhost)
-- `PORT` - Server port (default: 3000)
-- `READ_TIMEOUT` - HTTP read timeout (default: 10s)
-- `WRITE_TIMEOUT` - HTTP write timeout (default: 10s)
-- `IDLE_TIMEOUT` - HTTP idle timeout (default: 60s)
-
-### Command Line Flags
-```bash
-./bin/weather-stock-api -help
-
-# Custom configuration
-./bin/weather-stock-api -host=0.0.0.0 -port=8080 -read-timeout=30s
-```
-
-### Examples
-```bash
-# Run on all interfaces, port 8080
-PORT=8080 HOST=0.0.0.0 ./bin/weather-stock-api
-
-# Run with custom timeouts
-./bin/weather-stock-api -read-timeout=30s -write-timeout=30s
-```
-
-## Development
-
-### Project Structure
-```
-agent_summit_bazel_workshop/
-├── cmd/
-│   └── main.go                 # Application entry point
-├── pkg/
-│   ├── models/                 # Data structures and types
-│   │   ├── common.go          # Shared types and errors
-│   │   ├── weather.go         # Weather response models
-│   │   └── stock.go           # Stock response models
-│   ├── weather/               # Weather service package
-│   │   ├── client.go          # Open-Meteo API client
-│   │   ├── geocode.go         # City to coordinates conversion
-│   │   ├── service.go         # Business logic layer
-│   │   └── *_test.go          # Unit tests
-│   ├── stock/                 # Stock service package
-│   │   ├── client.go          # Yahoo Finance API client
-│   │   ├── service.go         # Business logic layer
-│   │   └── *_test.go          # Unit tests
-│   └── server/                # HTTP server package
-│       ├── handlers.go        # HTTP request handlers
-│       ├── middleware.go      # Middleware (logging, CORS, etc.)
-│       ├── router.go          # Route definitions
-│       └── server.go          # Server configuration
-├── internal/
-│   └── testutils/             # Testing utilities
-│       ├── mocks.go           # HTTP client mocks
-│       └── fixtures.go        # Test data fixtures
-├── bin/                       # Compiled binaries
-└── go.mod                     # Go module definition
-```
-
-### Running Tests
-```bash
-# Run all tests
-go test ./...
-
-# Run tests with verbose output
-go test ./... -v
-
-# Run tests for specific package
-go test ./pkg/weather -v
-go test ./pkg/stock -v
-
-# Run tests with coverage
-go test ./... -cover
-```
-
-### Building
-```bash
-# Build for current platform
-go build -o bin/weather-stock-api ./cmd
-
-# Build for Linux
-GOOS=linux GOARCH=amd64 go build -o bin/weather-stock-api-linux ./cmd
-
-# Build for Windows
-GOOS=windows GOARCH=amd64 go build -o bin/weather-stock-api.exe ./cmd
-```
-
-## Architecture
-
-### Design Principles
-- **Clean Architecture**: Separation of concerns with clear package boundaries
-- **Dependency Injection**: HTTP clients are injected for easy testing
-- **Interface-Based Design**: HTTP clients use interfaces for mockability  
-- **Comprehensive Testing**: All business logic covered by unit tests
-- **Error Handling**: Structured error responses with appropriate HTTP status codes
-- **Middleware**: Logging, CORS, security headers, and panic recovery
-
-### External APIs Used
-
-#### Open-Meteo Weather API
-- **URL**: https://api.open-meteo.com/v1/current
-- **Authentication**: None required
-- **Rate Limits**: Generous free tier
-- **Features**: Current weather, geocoding, high accuracy
-
-#### Yahoo Finance API
-- **URL**: https://query1.finance.yahoo.com/v7/finance/quote
-- **Authentication**: None required
-- **Rate Limits**: Can be restrictive (429 errors)
-- **Features**: Real-time stock data, market status, company info
-- **Fallback**: Demo mode with realistic simulated data when rate-limited
-
-## Example Workflow
-
-```bash
-# Start the server
-./bin/weather-stock-api
-
-# Check health
-curl http://localhost:3000/health
-
-# Get weather for Stuttgart
-curl "http://localhost:3000/weather?city=Stuttgart"
-
-# Get Datadog stock price
-curl http://localhost:3000/stock/datadog
-
-# Get weather summary
-curl "http://localhost:3000/weather/summary?city=Stuttgart"
-
-# Get stock summary
-curl "http://localhost:3000/stock/summary?symbol=DDOG"
-```
-
-## Demo Mode & Fallback
-
-When the Yahoo Finance API returns rate limiting errors (HTTP 429) or server errors (5xx), the stock service automatically falls back to **Demo Mode** which provides realistic simulated stock data.
-
-### Demo Mode Features
-- **Realistic Data**: Simulated prices based on real market patterns
-- **Time-Aware**: Market state changes based on current time (open/closed/pre-market/after-hours)
-- **Price Variation**: Prices vary slightly over time to simulate market movement
-- **Multiple Stocks**: Supports DDOG, AAPL, GOOGL, MSFT, TSLA
-- **Clear Indication**: Response includes "Demo Mode (Simulated Data)" in the source field
-
-### Example Demo Response
-```json
-{
-  "success": true,
-  "data": {
-    "symbol": "DDOG",
-    "company_name": "Datadog, Inc.",
-    "price": 127.45,
-    "change": 1.95,
-    "change_percent": 1.55,
-    "market_state": "REGULAR",
-    "metadata": {
-      "timestamp": "2024-01-15T14:30:00Z",
-      "source": "Demo Mode (Simulated Data)"
-    }
-  }
-}
-```
-
-## Error Handling
-
-The API returns structured error responses:
-
-```json
-{
-  "error": "City 'InvalidCity' not found",
-  "code": 404,
-  "message": "Request failed",
-  "timestamp": "2024-01-15T14:30:15Z"
-}
-```
-
-Common HTTP status codes:
-- `200` - Success
-- `400` - Bad Request (missing parameters, invalid input)
-- `404` - Not Found (city not found, stock symbol not found)
-- `500` - Internal Server Error (API failures, network issues)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass: `go test ./...`
-5. Build successfully: `go build ./cmd`
-6. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details.
-
----
-
-**Built with Go 1.24.4** • **No API keys required** • **Ready for production**

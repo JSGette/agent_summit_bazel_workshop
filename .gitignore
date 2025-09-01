@@ -1,1 +1,5 @@
 bin/
+bazel-agent_summit_bazel_workshop
+bazel-bin
+bazel-out
+bazel-testlogs
