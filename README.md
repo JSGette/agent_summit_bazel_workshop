@@ -106,7 +106,7 @@ Now let's see if failing tests are failing constantly or flaky.
 bazel test //... --runs_per_test=10 --runs_per_test_detects_flakes
 ```
 
-And now let's mark our known test as flaky in [stock_test](./pkg/stock/BUILD.bazel):
+And now let's mark our known test as flaky in `./pkg/stock/BUILD.bazel`:
 ```python
 go_test(
     name = "stock_test",
