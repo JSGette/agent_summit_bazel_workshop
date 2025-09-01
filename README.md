@@ -9,11 +9,7 @@ In fact, our intention is to show how easy it actually is to start
 working with it.
 
 
-## Environment Setup ##
-
-This sections covers steps that should be taken before we actually
-begin the workshop.
-
+## Setup ##
 1. Install `bazelisk`. We want to be able to bump bazel's version whenever we
 want or need. Major LTE versions are released every year and usually bring
 UX and performance improvements, sometimes it is necessary to also upgrade to
