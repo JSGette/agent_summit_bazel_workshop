@@ -122,3 +122,13 @@ go_test(
     flaky = True,
 )
 ```
+
+## Worth reading ##
+- [Bazel command line reference](https://bazel.build/reference/command-line-reference) - overview of all flags available in bazel. Keep in mind that flags may change
+based on bazel's version so it is recommended to use versioned docs (see navigation bar)
+- [Working with Go in bazel](https://github.com/bazel-contrib/rules_go/blob/master/docs/go/core/bzlmod.md#specifying-external-dependencies) - must read for anyone who is planning to use bazel with their codebase.
+- [Bazel Central Registry](https://registry.bazel.build/) - even though `bzlmod` is still fresh and a lot of legacy projects are still relying on `WORKSPACE` approach
+more and more modules and tools are added to the Central Registry, so before thinking on "bazelization" of a new tool or a dependency it's worth checking if it isn't
+already present in BCR.
+- [Reasoning and migration guide for bzlmod](https://bazel.build/external/migration) - we are starting fresh in the Agent, therefore, we will use `bzlmod` right away,
+so you won't have to deal with `WORKSPACE`, however it's worth reading this article to understand the background.
