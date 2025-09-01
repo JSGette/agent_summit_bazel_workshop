@@ -87,3 +87,38 @@ bazel test //...
 bazel run //cmd:cmd
 ```
 
+## Flaky Tests Detection ##
+`bazel` is not only powerful when it comes to building, but also very helpful running
+tests. It allows us:
+- to set how many times we should run certain tests or all of them by setting [--runs_per_test=](https://bazel.build/reference/command-line-reference#flag--runs_per_test)
+- to automatically detect flaky tests by setting [--runs_per_test_detects_flakes](https://bazel.build/reference/command-line-reference#flag--runs_per_test_detects_flakes). When used in combination with the flag above it will not fail the results of `bazel test` commands,
+but will mark failing tests as `FLAKY` instead of `FAILED`
+- to set timeouts and compute resources based on [size attribute](https://bazel.build/reference/be/common-definitions#common-attributes-tests)
+- to mark tests known to fail now and then as flaky by setting `flaky = True` attribute to the `*_test` target. 
+
+Now let's actually ask bazel to run tests several times to see if we have any failing tests.
+```zsh
+bazel test //... --runs_per_test=10
+```
+
+Now let's see if failing tests are failing constantly or flaky.
+```zsh
+bazel test //... --runs_per_test=10 --runs_per_test_detects_flakes
+```
+
+And now let's mark our known test as flaky in [stock_test](./pkg/stock/BUILD.bazel):
+```python
+go_test(
+    name = "stock_test",
+    srcs = [
+        "client_test.go",
+        "service_test.go",
+    ],
+    embed = [":stock"],
+    deps = [
+        "//internal/testutils",
+        "//pkg/models",
+    ],
+    flaky = True,
+)
+```

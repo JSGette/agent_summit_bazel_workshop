@@ -23,4 +23,5 @@ go_test(
         "//internal/testutils",
         "//pkg/models",
     ],
+    size = "small",
 )
