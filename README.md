@@ -2,18 +2,18 @@
 
 The purpose of this workshop is to show Agent developers
 how to interact with bazel. We are mainly focusing on
-`go` as other parts, such as dealing with native dependencies
-will be mainly in scope of `Agent Build` team. It is not expected
+`go` since other parts, such as dealing with native dependencies,
+will be mainly in scope of the `Agent Build` team. It is not expected
 that participants of this workshop have prior `bazel` experience. 
-In fact, our intention is to show how easy it actually is to start
+In fact, our intention is to show how easy it actually is to get started
 working with it.
 
 
 ## Setup ##
 1. Install `bazelisk`. We want to be able to bump bazel's version whenever we need.
 Major LTE versions are released every year and usually bring
-UX and performance improvements, sometimes it is necessary to also upgrade to
-new patch or minor versions to fix bugs. `bazelisk` reads `bazelversion` file
+UX and performance improvements. Sometimes, it is also necessary upgrade to
+new patch or minor versions to fix bugs. `bazelisk` reads the `.bazelversion` file
 and automatically pulls the version that is needed by this particular project.
 ```zsh
 which bazelisk
@@ -22,21 +22,31 @@ which bazelisk
 brew install bazelisk
 ```
 
-2. Create `.bazelversion` file. The file is read by `bazelisk` to pull
-required bazel's version. This makes the process of build system update 
-completely transparent to the users, we also ensure that going to old
+2. Create a `.bazelversion` file at the root of the repository. The file is read by `bazelisk` to pull
+required bazel's version. This frees users from having to manually manage the version of the build system
+and avoids versions drifting between developer machines and with CI.
+It also lets us ensure that going to old
 branches doesn't break the build process:
 ```
 # We are using latest stable version
 8.3.1
 ```
 
-3. Create `MODULE.bazel` file. For external dependency management `bazel`
-is using a built-in system called `bzlmod`, it works similar to any other
-modern dependency manager. `MODULE.bazel` file is the main source, it is
-possible to define several `MODULE` files and then import them into the root one,
-but **IT IS IMPORTANT TO HAVE AT LEAST ONE MODULE.bazel FILE AS IT HINTS BAZEL**
-**THAT THIS IS BAZEL'S WORKSPACE**.
+You can confirm that this works as expected by running:
+
+```bash
+bazel --version
+```
+
+3. For external dependency management, `bazel`
+uses a built-in system called [`bzlmod`](https://bazel.build/external/overview), which works similarly to other
+modern dependency managers you may already be familiar with. The `MODULE.bazel` file at the root of a project
+marks it as a [Bazel module](https://bazel.build/external/module), and it's where dependencies are defined.
+It is possible to import other `MODULE` files inside the same project as a way to split the contents
+across files, but **it is important to have at least one MODULE.bazel file at the root as it's what bazel**
+**uses as [repository](https://bazel.build/concepts/build-ref#repositories) boundary markers**.
+
+Edit the provided empty `MODULE.bazel` file and add the following contents:
 
 ```python
 bazel_dep(name = "rules_go", version = "0.57.0")
@@ -53,9 +63,10 @@ go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
 # https://github.com/bazel-contrib/rules_go/blob/master/docs/go/core/bzlmod.md#go-sdks
 go_sdk.download(version = "1.24.4")
 ```
-4. Create `BUILD.bazel` file in the root of the project. BUILD files are 
-letting `bazel` know what is considered a package. The presence of the BUILD file
-in a directory makes the content of that directory visible to `bazel`. The content of
+
+4. Create a `BUILD.bazel` file in the root of the project. BUILD files let
+`bazel` know what is considered a [package](https://bazel.build/concepts/build-ref#packages). The presence of the BUILD file
+in a directory makes the content of that directory visible to `bazel`. Add the following to
 the `./BUILD.bazel` file:
 ```python
 load("@gazelle//:def.bzl", "gazelle")
@@ -63,18 +74,23 @@ load("@gazelle//:def.bzl", "gazelle")
 gazelle(name = "gazelle")
 ```
 
-5. Run `gazelle`. As you may have noticed in the previous step we are adding some
-magical lines mentioning gazelle. It is mentioned in `MODULE.bazel` as well as in `BUILD.bazel`.
-`gazelle` is a BUILD file generator tool for `bazel`. Go projects' structure is usually very
+5. Run `gazelle`. As you may have noticed in the previous step we added some
+magical lines mentioning `gazelle`. It is mentioned in `MODULE.bazel` as well as in `BUILD.bazel`.
+[`gazelle`](https://github.com/bazel-contrib/bazel-gazelle) is a BUILD file generator tool for `bazel`. Go projects' structure is usually very
 straight forward and go's build system is modern enough to rely on it instead of re-inventing 
-the wheel again. With that being said, most of the time we don't need to deal with bazel's internals
+the wheel again. That means that most of the time we don't need to interact with BUILD files directly
 and can just let `gazelle` do its work:
 ```zsh
 bazel run //:gazelle
 
 # Now let's run git to show us generated files
 git status
+```
 
+You can take a look at the generated `BUILD.bazel` files to get a feel for what they look like, even though, as just mentioned, most of the time you won't need to make changes to them.
+The contents can be fairly easy to understand most of the time even without knowing much about Bazel.
+
+```zsh
 # Let's try to build and test the project
 bazel build //...
 
