@@ -126,6 +126,36 @@ $> bazel test //...
 ```zsh
 $> bazel run //cmd:cmd
 ```
+# Exercises #
+## Adding new package ##
+This is a "freestyle" exercise. You can however just follow the presenter.
+
+1. Create a new folder within [./pkg](./pkg/) of your choice
+2. Create a new `.go` source file of your choice and implement some logic. Keep it independent from the rest of the packages for now.
+3. Now you need to make bazel aware of your newly created package. To do so just run gazelle.
+```zsh
+# This will shrink gazelle's scope to speed up the process and not go
+# through the entire project. In our case we could also run gazelle
+# without specifying path as this project is very simple and small.
+$> bazel run //:gazelle -- /pkg/<new_pkg>
+```
+4. (Optional) Now let's try to import our new package into already existing code.
+Let's see what happens if we run the same command as above:
+```zsh
+$> bazel run //:gazelle -- /pkg/<new_pkg>
+```
+As you see nothing has changed in the `<new_pkg>`. So we need to update the package
+where we imported our new package:
+```zsh
+# Example
+$> bazel run //:gazelle -- /pkg/server # In case changes were made in server
+
+# Template command
+$> bazel run //:gazelle -- /pkg/<changed_pkg>
+
+# Now let's see if BUILD file was updated accordingly
+$> git diff
+```
 
 ## Flaky Tests Detection ##
 `bazel` is not only powerful when it comes to building, but also very helpful running
