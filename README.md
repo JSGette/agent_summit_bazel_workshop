@@ -139,7 +139,7 @@ This is a "freestyle" exercise. You can however just follow the presenter.
 # without specifying path as this project is very simple and small.
 $> bazel run //:gazelle -- /pkg/<new_pkg>
 ```
-4. (Optional) Now let's try to import our new package into already existing code.
+4. **(Optional)** Now let's try to import our new package into already existing code.
 Let's see what happens if we run the same command as above:
 ```zsh
 $> bazel run //:gazelle -- /pkg/<new_pkg>
