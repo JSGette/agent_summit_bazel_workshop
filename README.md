@@ -157,6 +157,39 @@ $> bazel run //:gazelle -- /pkg/<changed_pkg>
 $> git diff
 ```
 
+## Working with external dependencies ##
+Let's now check how we can handle external dependencies. Recommended way is to actually
+store the list directly in [go.mod](./go.mod).
+
+1. Let's add an external dependency to [go.mod](./go.mod):
+```go
+require github.com/shopspring/decimal v1.3.1
+```
+
+2. Let's add a simple function into a newly created source in `pkg/math/operator.go`:
+```go
+import "github.com/shopspring/decimal"
+
+func (o Operator) DecimalApply(a, b decimal.Decimal) (decimal.Decimal, error) {
+	switch o {
+	case Add:
+		return a.Add(b), nil
+	case Subtract:
+		return a.Sub(b), nil
+	}
+
+	return decimal.Decimal{}, fmt.Errorf("invalid operator: %s", o)
+}
+```
+
+3. Now we should pull the dependency:
+```zsh
+$> go mod tidy
+
+# Run gazelle to update BUILD files accordingly
+$> bazel run //:gazelle
+```
+
 ## Flaky Tests Detection ##
 `bazel` is not only powerful when it comes to building, but also very helpful running
 tests. It allows us:
