@@ -15,12 +15,36 @@ Major LTE versions are released every year and usually bring
 UX and performance improvements. Sometimes, it is also necessary upgrade to
 new patch or minor versions to fix bugs. `bazelisk` reads the `.bazelversion` file
 and automatically pulls the version that is needed by this particular project.
+### Macos ###
 ```zsh
 which bazelisk
 
 # If you have no installation then do so
 brew install bazelisk
 ```
+
+### Windows ###
+```powershell
+$> winget install Bazel.Bazelisk
+```
+or
+```powershell
+$> choco install bazelisk
+```
+or
+```powershell
+$> scoop install bazelisk
+```
+
+### Linux ###
+You can either download an executable from [releases](https://github.com/bazelbuild/bazelisk/releases)
+or a debian package (if applicable) and run:
+```zsh
+dpkg -i bazelisk-<arch>.deb
+```
+
+**As a last resort you can always download executables for your platform**
+**from [releases](https://github.com/bazelbuild/bazelisk/releases)**
 
 2. Create a `.bazelversion` file at the root of the repository. The file is read by `bazelisk` to pull
 required bazel's version. This frees users from having to manually manage the version of the build system
