@@ -17,10 +17,10 @@ new patch or minor versions to fix bugs. `bazelisk` reads the `.bazelversion` fi
 and automatically pulls the version that is needed by this particular project.
 ### Macos ###
 ```zsh
-which bazelisk
+$> which bazelisk
 
 # If you have no installation then do so
-brew install bazelisk
+$> brew install bazelisk
 ```
 
 ### Windows ###
@@ -40,7 +40,7 @@ $> scoop install bazelisk
 You can either download an executable from [releases](https://github.com/bazelbuild/bazelisk/releases)
 or a debian package (if applicable) and run:
 ```zsh
-dpkg -i bazelisk-<arch>.deb
+$> dpkg -i bazelisk-<arch>.deb
 ```
 
 **As a last resort you can always download executables for your platform**
@@ -59,7 +59,7 @@ branches doesn't break the build process:
 You can confirm that this works as expected by running:
 
 ```bash
-bazel --version
+$> bazel --version
 ```
 
 3. For external dependency management, `bazel`
@@ -105,10 +105,10 @@ straight forward and go's build system is modern enough to rely on it instead of
 the wheel again. That means that most of the time we don't need to interact with BUILD files directly
 and can just let `gazelle` do its work:
 ```zsh
-bazel run //:gazelle
+$> bazel run //:gazelle
 
 # Now let's run git to show us generated files
-git status
+$> git status
 ```
 
 You can take a look at the generated `BUILD.bazel` files to get a feel for what they look like, even though, as just mentioned, most of the time you won't need to make changes to them.
@@ -116,15 +116,15 @@ The contents can be fairly easy to understand most of the time even without know
 
 ```zsh
 # Let's try to build and test the project
-bazel build //...
+$> bazel build //...
 
 # Execute unit tests
-bazel test //...
+$> bazel test //...
 ```
 
 6. Run the demo application:
 ```zsh
-bazel run //cmd:cmd
+$> bazel run //cmd:cmd
 ```
 
 ## Flaky Tests Detection ##
@@ -138,12 +138,12 @@ but will mark failing tests as `FLAKY` instead of `FAILED`
 
 Now let's actually ask bazel to run tests several times to see if we have any failing tests.
 ```zsh
-bazel test //... --runs_per_test=10
+$> bazel test //... --runs_per_test=10
 ```
 
 Now let's see if failing tests are failing constantly or flaky.
 ```zsh
-bazel test //... --runs_per_test=10 --runs_per_test_detects_flakes
+$> bazel test //... --runs_per_test=10 --runs_per_test_detects_flakes
 ```
 
 And now let's mark our known test as flaky in `./pkg/stock/BUILD.bazel`:
