@@ -170,6 +170,17 @@ $> bazel run //:gazelle
 ```
 
 ## Query ##
+bazel has a built-in query language that allows to analyze the relations between
+targets and even actions. This time we will focus on the former and try out `cquery`.
+For instance, if we want to get the full list of dependencies for a particular target
+we can just run:
+```zsh
+# Let's check the dependencies of our cmd target
+$> bazel cquery "deps(//cmd:cmd)" --notool_deps
+
+# Now let's find all test targets
+bazel cquery "kind(go_test, //...)" 
+```
 
 ## Flaky Tests Detection ##
 `bazel` is not only powerful when it comes to building, but also very helpful running
@@ -216,3 +227,4 @@ more and more modules and tools are added to the Central Registry, so before thi
 already present in BCR.
 - [Reasoning and migration guide for bzlmod](https://bazel.build/external/migration) - we are starting fresh in the Agent, therefore, we will use `bzlmod` right away,
 so you won't have to deal with `WORKSPACE`, however it's worth reading this article to understand the background.
+- [Bazel Query Language](https://bazel.build/query/language) - official documentation about query language and built-in functions and features.
