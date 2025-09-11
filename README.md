@@ -61,34 +61,7 @@ You can confirm that this works as expected by running:
 ```bash
 $> bazel --version
 ```
-
-3. For external dependency management, `bazel`
-uses a built-in system called [`bzlmod`](https://bazel.build/external/overview), which works similarly to other
-modern dependency managers you may already be familiar with. The `MODULE.bazel` file at the root of a project
-marks it as a [Bazel module](https://bazel.build/external/module), and it's where dependencies are defined.
-It is possible to import other `MODULE` files inside the same project as a way to split the contents
-across files, but **it is important to have at least one MODULE.bazel file at the root as it's what bazel**
-**uses as [repository](https://bazel.build/concepts/build-ref#repositories) boundary markers**.
-
-Edit the provided empty `MODULE.bazel` file and add the following contents:
-
-```python
-bazel_dep(name = "rules_go", version = "0.57.0")
-bazel_dep(name = "gazelle", version = "0.45.0")
-
-
-# Bazel can manage toolchains and SDKs for us.
-# This way we don't need to manually install the Go SDK
-# and we ensure that all users have the same version of the Go SDK.
-go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
-
-# Setting Go SDK version.
-# Alternative ways to set Go SDK can be found here:
-# https://github.com/bazel-contrib/rules_go/blob/master/docs/go/core/bzlmod.md#go-sdks
-go_sdk.download(version = "1.24.4")
-```
-
-4. Create a `BUILD.bazel` file in the root of the project. BUILD files let
+3. Create a `BUILD.bazel` file in the root of the project. BUILD files let
 `bazel` know what is considered a [package](https://bazel.build/concepts/build-ref#packages). The presence of the BUILD file
 in a directory makes the content of that directory visible to `bazel`. Add the following to
 the `./BUILD.bazel` file:
@@ -98,7 +71,7 @@ load("@gazelle//:def.bzl", "gazelle")
 gazelle(name = "gazelle")
 ```
 
-5. Run `gazelle`. As you may have noticed in the previous step we added some
+4. Run `gazelle`. As you may have noticed in the previous step we added some
 magical lines mentioning `gazelle`. It is mentioned in `MODULE.bazel` as well as in `BUILD.bazel`.
 [`gazelle`](https://github.com/bazel-contrib/bazel-gazelle) is a BUILD file generator tool for `bazel`. Go projects' structure is usually very
 straight forward and go's build system is modern enough to rely on it instead of re-inventing 
@@ -122,7 +95,7 @@ $> bazel build //...
 $> bazel test //...
 ```
 
-6. Run the demo application:
+5. Run the demo application:
 ```zsh
 $> bazel run //cmd:cmd
 ```
@@ -158,8 +131,14 @@ $> git diff
 ```
 
 ## Working with external dependencies ##
-Let's now check how we can handle external dependencies. Recommended way is to actually
-store the list directly in [go.mod](./go.mod).
+For external dependency management, `bazel` uses a built-in system called [`bzlmod`](https://bazel.build/external/overview),
+which works similarly to other modern dependency managers you may already be familiar with. The `MODULE.bazel` file at the root of a project
+marks it as a [Bazel module](https://bazel.build/external/module), and it's where dependencies are defined.
+It is possible to import other `MODULE` files inside the same project as a way to split the contents
+across files, but **it is important to have at least one MODULE.bazel file at the root as it's what bazel**
+**uses as [repository](https://bazel.build/concepts/build-ref#repositories) boundary markers**.
+
+Let's now check how we can handle external go dependencies. Recommended way is to store the list directly in [go.mod](./go.mod).
 
 1. Let's add an external dependency to [go.mod](./go.mod):
 ```go
@@ -189,6 +168,8 @@ $> go mod tidy
 # Run gazelle to update BUILD files accordingly
 $> bazel run //:gazelle
 ```
+
+## Query ##
 
 ## Flaky Tests Detection ##
 `bazel` is not only powerful when it comes to building, but also very helpful running
