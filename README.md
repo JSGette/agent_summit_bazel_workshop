@@ -163,7 +163,7 @@ func (o Operator) DecimalApply(a, b decimal.Decimal) (decimal.Decimal, error) {
 
 3. Now we should pull the dependency:
 ```zsh
-$> go mod tidy
+$> bazel run @rules_go//go -- mod tidy -v
 
 # Run gazelle to update BUILD files accordingly
 $> bazel run //:gazelle
