@@ -167,7 +167,19 @@ func (o Operator) DecimalApply(a, b decimal.Decimal) (decimal.Decimal, error) {
 }
 ```
 
-3. Now we should pull the dependency:
+3. We need to tell bazel to pull the list of external dependencies from
+[go.mod](./go.mod) file. To do that we need to add the following lines
+to [MODULE.bazel](./MODULE.bazel)
+
+```
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(
+    go_deps,
+)
+```
+
+4. Now we should pull the dependency:
 ```zsh
 $> bazel run @rules_go//go -- mod tidy -v
 
