@@ -8,6 +8,12 @@ that participants of this workshop have prior `bazel` experience.
 In fact, our intention is to show how easy it actually is to get started
 working with it.
 
+### Questionnaire ###
+Please, take some time to answer some questions about your experience
+dealing with build systems and this workshop.
+
+[Questionnaire](https://docs.google.com/forms/d/e/1FAIpQLSdsiKeb378jRM3ZTt3WCjVcKWxueIc36urIOLR5FcpEdwFN6Q/viewform?usp=dialog)
+
 
 ## Setup ##
 1. Install `bazelisk`. We want to be able to bump bazel's version whenever we need.
